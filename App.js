@@ -8,28 +8,73 @@
  * @format
  */
 import React, { Component } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Text, View, Alert } from 'react-native';
 import TodoList from './src/components/todos.component';
-import { Provider } from 'react-redux';
-import { Store } from './src/reducers/store';
-const instructions = Platform.select({
-    ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
-    android: 'Double tap R on your keyboard to reload,\n' +
-        'Shake or press menu button for dev menu',
-});
+import { NotifService } from './src/push-notifications/pushnotifications';
+import openSocket from './src/websocket/webscocket';
+import EStyleSheet from 'react-native-extended-stylesheet';
 export default class App extends Component {
+    constructor(props) {
+        super(props);
+        this.notif = null;
+        this.state = {
+            senderId: ""
+        };
+        NotifService.configure(this.onRegister.bind(this), this.onNotif.bind(this));
+        openSocket();
+    }
     render() {
-        return (React.createElement(Provider, { store: Store },
+        return (React.createElement(View, { style: { flex: 1, alignItems: 'center' } },
+            React.createElement(View, { style: styles.header },
+                React.createElement(Text, { style: styles.headertext }, "Todo's")),
             React.createElement(View, { style: styles.container },
-                React.createElement(TodoList, null))));
+                React.createElement(TodoList, null)),
+            React.createElement(View, { style: { height: 50 } },
+                React.createElement(Text, null, "By Anji Kinnara"))));
+    }
+    onRegister(token) {
+        Alert.alert("Registered !", JSON.stringify(token));
+        console.log(token);
+        this.setState({ registerToken: token.token, gcmRegistered: true });
+    }
+    onNotif(notif) {
+        console.log(notif);
+        Alert.alert(notif.title, notif.message);
+    }
+    handlePerm(perms) {
+        Alert.alert("Permissions", JSON.stringify(perms));
     }
 }
-const styles = StyleSheet.create({
+const styles = EStyleSheet.create({
+    header: {
+        width: '100%',
+        marginTop: 50,
+        height: 50,
+        justifyContent: 'center',
+        backgroundColor: 'grey'
+    },
+    headertext: {
+        fontSize: '2rem',
+        color: 'white',
+        textAlign: 'center'
+    },
     container: {
         flex: 1,
-        marginTop: 50,
-        marginLeft: 10,
-        marginRight: 10,
         marginBottom: 10,
+        marginTop: 15,
+        alignItems: 'center',
+        backgroundColor: 'white'
     },
+    button: {
+        borderWidth: 1,
+        borderColor: "#000000",
+        margin: 5,
+        padding: 5,
+        width: "70%",
+        backgroundColor: "#DDDDDD",
+        borderRadius: 5,
+    },
+});
+EStyleSheet.build({
+    $textColor: '#0275d8'
 });
